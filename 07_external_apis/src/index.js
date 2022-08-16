@@ -132,10 +132,53 @@ document.addEventListener('DOMContentLoaded', () => {
         //Handles Google Books API search
         function handleAPIQuery(e){
             e.preventDefault();
+
             const search = e.target.search.value;
+
+            // clear any previous results
+            document.querySelectorAll('div.book-result').forEach((book) => book.remove());
+
+            // get new results
+            fetch(`https://www.googleapis.com/books/v1/volumes?q=${search}&maxResults=20&key=${API_KEY}`)
+            .then ((response) => response.json())
+            .then((data) => {
+                data.items.forEach((item) => renderResultCard(item))
+            });
+        }
+
+        function renderResultCard(book) {
+            const bookCard = document.createElement('div');
+            bookCard.classList.add('book-result');
+
+            const bookTitle = document.createElement('h2');
+            const bookPublisher = document.createElement('p');
+            const bookAuthors = document.createElement('p');
+            const bookImg = document.createElement('img');
+
+            // title
+            bookTitle.textContent = `Title: ${book.volumeInfo.title}`;
+
+            // publisher
+            if (book.volumeInfo.publisher) {bookPublisher.textContent = book.volumeInfo.publisher}
+            else {bookPublisher.textContent = 'No Publisher!'}
+
+            // authors
+            if (book.volumeInfo.authors) {
+                const authAry = book.volumeInfo.authors;
+                if (authAry.length > 3) {bookAuthors.textContent = `${authAry[0]}, et al.`}
+                else {bookAuthors.textContent = book.volumeInfo.authors.join(', ')}
+            } else {
+                bookAuthors.textContent = 'No authors'
+            }
+
+            // thumbnails
+            if (book.volumeInfo.imageLinks) {bookImg.src = book.volumeInfo.imageLinks.smallThumbnail}
+            else {bookImg.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png'}
+            bookImg.classList.add('thumbnail');
             
-            // 
-            console.log(search);
+            // append results
+            bookCard.append(bookTitle, bookPublisher, bookAuthors, bookImg);
+            document.querySelector('main').append(bookCard);
         }
 
     
